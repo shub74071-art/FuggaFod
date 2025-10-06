@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fugga Fod Timer-Free</title>
+<style>
+body { margin:0; padding:0; overflow:hidden; font-family:sans-serif; background: url('images/bg.png') no-repeat center center fixed; background-size: cover; }
+canvas { display:block; margin:0 auto; }
+#bottomBar { position:absolute; bottom:0; left:0; width:100%; height:2.2cm; background-color:pink; z-index:5; }
+#scoreDisplay { position:absolute; top:10px; width:100%; text-align:center; color:#fff; font-size:24px; font-weight:bold; z-index:10; -webkit-text-stroke:1px black; }
+#roundDisplay { position:absolute; top:10px; left:10px; color:#fff; font-size:16px; font-weight:normal; z-index:10; -webkit-text-stroke:1px black; }
+#demoDisplay { position:absolute; top:50%; width:100%; text-align:center; color:#fff; font-size:36px; font-weight:bold; transform:translateY(-50%); z-index:10; }
+#colorSelect { position:absolute; top:60px; width:100%; text-align:center; display:none; color:#000; }
+.colorBtn { width:40px; height:40px; border-radius:50%; border:2px solid #000; margin:2px; display:inline-block; cursor:pointer; transition:0.2s; }
+button { padding:6px 12px; border:none; border-radius:6px; background:#ffd166; color:#081226; font-weight:bold; cursor:pointer; margin:4px; }
+#leaderboard { display:none; position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); background:#0d1b2a; padding:20px; border-radius:12px; text-align:center; color:#fff; }
+.pointPopup { position:absolute; font-weight:bold; pointer-events:none; font-size:24px; text-shadow:1px 1px 3px #000; animation:floatUp 0.7s forwards; }
+@keyframes floatUp { 0% {opacity:1; transform:translateY(0);} 100% {opacity:0; transform:translateY(-50px);} }
+</style>
+</head>
+<body>
+<canvas id="gameCanvas"></canvas>
+<div id="bottomBar"></div>
+<div id="scoreDisplay">Score: 0</div>
+<div id="roundDisplay"></div>
+<div id="demoDisplay"></div>
+<div id="colorSelect">
+    <span>Choose Forbidden Color:</span><br>
+    <div id="colorButtons"></div>
+    <button id="startRoundBtn">Start Round</button>
+</div>
+<div id="leaderboard">
+    <h2>Leaderboard</h2>
+    <div id="leaderboardList"></div>
+    <button onclick="restartGame()">Play Again</button>
+</div>
+
+<script>
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+let width = window.innerWidth, height = window.innerHeight;
+canvas.width = width; canvas.height = height;
+
+const scoreDisplay = document.getElementById('scoreDisplay');
+const roundDisplay = document.getElementById('roundDisplay');
+const demoDisplay = document.getElementById('demoDisplay');
+const leaderboard = document.getElementById('leaderboard');
+const leaderboardList = document.getElementById('leaderboardList');
+const colorButtonsDiv = document.getElementById('colorButtons');
+const startRoundBtn = document.getElementById('startRoundBtn');
+
+const NORMAL_COLORS = ['red','blue','green','yellow','purple'];
+const BONUS_COLOR = 'orange';
+const BLACK_COLOR = 'black';
+
+let gameState = 'demo', score = 0, round = 0, forbiddenColor = '', balloons = [], firstTap = true;
+let roundScore = 0;
+let roundSpeeds = [2, 3, 3.5];
+let spawnInterval = null;
+
+class Balloon {
+    constructor(x, y, color, isBonus=false, isBlack=false) {
+        this.x = x; this.y = y; this.color = color; this.isBonus = isBonus; this.isBlack = isBlack;
+        this.popped = false; this.width = 160;
+        this.sway = Math.random() * 1 + 0.5;
+        this.swayDir = Math.random() < 0.5 ? 1 : -1;
+        this.offset = 0;
+        this.spawnTime = Date.now();
+        this.img = new Image(); this.imgLoaded=false;
+        this.img.onload = ()=>{this.imgLoaded=true;}
+        this.img.src = `images/${color}.png`;
+    }
+    draw(ctx) {
+        if(this.popped||!this.imgLoaded) return;
+        const h = this.img.height/this.img.width*this.width;
+        ctx.drawImage(this.img, this.x+this.offset-this.width/2, this.y-h/2, this.width, h);
+    }
+    update(speed) {
+        if(this.popped) return;
+        this.y -= speed;
+        this.offset += this.sway*this.swayDir;
+        if(Math.abs(this.offset)>15) this.swayDir*=-1;
+    }
+    hitTest(px, py){
+        if(!this.imgLoaded||this.popped) return false;
+        const h = this.img.height/this.img.width*this.width;
+        return px>this.x-this.width/2+this.offset &&
+               px<this.x+this.width/2+this.offset &&
+               py>this.y-h/2 && py<this.y+h/2;
+    }
+}
+
+function random(min,max){return Math.random()*(max-min)+min;}
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+function getSpawnX(){const margin=60;return random(margin,width-margin);}
+function isOverlap(x,y){return balloons.some(b=>Math.abs(b.x-x)<120&&Math.abs(b.y-y)<120);}
+function playPopSound(){const s=new Audio('pop.mp3');s.play().catch(()=>{});}
+function playPenaltySound(){const s=new Audio('penalty.mp3');s.play().catch(()=>{});}
+function showPoints(x,y,p){
+    const div=document.createElement('div');
+    div.className='pointPopup';
+    div.style.left=(x-20)+'px';
+    div.style.top=(y-20)+'px';
+    div.innerText=(p>0?'+':'')+p;
+    div.style.color=p<0?'red':'lime';
+    document.body.appendChild(div);
+    setTimeout(()=>div.remove(),700);
+}
+
+function popBalloon(b){
+    if(b.popped) return;
+    b.popped = true;
+    let points;
+    if(b.isBonus) points=20;
+    else if(b.isBlack) points=-50;
+    else if(b.color===forbiddenColor) points=-15;
+    else{
+        let elapsed = (Date.now()-b.spawnTime)/1000;
+        if(round===1){
+            if(elapsed<0.2) points=21;
+            else if(elapsed<0.4) points=20;
+            else if(elapsed<0.5) points=19;
+            else if(elapsed<0.6) points=18;
+            else if(elapsed<0.7) points=17;
+            else points=16;
+        } else {
+            if(elapsed<0.2) points=21;
+            else if(elapsed<0.3) points=20;
+            else if(elapsed<0.4) points=19;
+            else if(elapsed<0.5) points=18;
+            else if(elapsed<0.6) points=17;
+            else points=16;
+        }
+    }
+    score+=points; roundScore+=points;
+    scoreDisplay.innerText=`Score: ${score}`;
+    showPoints(b.x,b.y,points);
+    if(b.isBlack||b.color===forbiddenColor) playPenaltySound();
+    else playPopSound();
+}
+
+function getCanvasPos(e){const r=canvas.getBoundingClientRect();return {x:e.clientX-r.left,y:e.clientY-r.top};}
+function handleTap(pos){if(firstTap){playPopSound();firstTap=false;} balloons.forEach(b=>{if(b.hitTest(pos.x,pos.y)) popBalloon(b);});}
+canvas.addEventListener('touchstart', e=>{ e.preventDefault(); for(let t=0;t<e.touches.length;t++) handleTap(getCanvasPos(e.touches[t]));},{passive:false});
+canvas.addEventListener('mousedown', e=>{handleTap(getCanvasPos(e));});
+
+function buildSpawnPool(roundIndex){
+    const data=[
+        {red:4, blue:5, green:5, yellow:5, purple:5, bonus:1, black:1},
+        {red:5, blue:6, green:6, yellow:6, purple:6, bonus:1, black:2},
+        {red:6, blue:7, green:7, yellow:7, purple:7, bonus:1, black:3}
+    ][roundIndex];
+    let pool=[];
+    for(const c of NORMAL_COLORS) for(let i=0;i<data[c];i++) pool.push(c);
+    for(let i=0;i<data.bonus;i++) pool.push(BONUS_COLOR);
+    for(let i=0;i<data.black;i++) pool.push(BLACK_COLOR);
+    return shuffle(pool);
+}
+
+let spawnPool=[];
+function startRoundSpawning(){
+    spawnPool=buildSpawnPool(round-1);
+    let idx=0;
+    const pinkBarHeight=2.2*37.8;
+    const interval=500;
+    clearInterval(spawnInterval);
+    spawnInterval=setInterval(()=>{
+        if(idx>=spawnPool.length){ clearInterval(spawnInterval); spawnInterval=null; return;}
+        let color=spawnPool[idx]; idx++;
+        let x,y,attempts=0;
+        do{ x=getSpawnX(); y=height-pinkBarHeight+60; attempts++; if(attempts>30) break; } while(isOverlap(x,y));
+        const isBonus=color===BONUS_COLOR;
+        const isBlack=color===BLACK_COLOR;
+        let b=new Balloon(x,y,color,isBonus,isBlack);
+        b.speed=roundSpeeds[round-1];
+        balloons.push(b);
+    },interval);
+}
+
+function startDemo(){
+    gameState='demo';
+    demoDisplay.innerText='5s';
+    let dt=5;
+    let dInt=setInterval(()=>{
+        dt--; 
+        if(dt>0) demoDisplay.innerText=`${dt}s`;
+        else{ clearInterval(dInt); demoDisplay.innerText=''; round=1; showColorChoices();}
+    },1000);
+}
+
+function showColorChoices(){
+    colorButtonsDiv.innerHTML='';
+    NORMAL_COLORS.forEach(c=>{
+        const btn=document.createElement('div');
+        btn.className='colorBtn';
+        btn.style.background=c;
+        btn.addEventListener('click', ()=>{
+            forbiddenColor=c;
+            document.querySelectorAll('.colorBtn').forEach(b=>b.style.border='2px solid #000');
+            btn.style.border='4px solid black';
+        });
+        colorButtonsDiv.appendChild(btn);
+    });
+    startRoundBtn.onclick=function(){
+        if(!forbiddenColor){alert('Choose forbidden color!'); return;}
+        document.getElementById('colorSelect').style.display='none';
+        gameState='round'; balloons=[]; roundScore=0;
+        startRoundSpawning();
+    }
+    document.getElementById('colorSelect').style.display='block';
+}
+
+function showRoundScore(rs){
+    const div=document.createElement('div');
+    div.style.position='absolute';
+    div.style.left='50%';
+    div.style.top='40%';
+    div.style.transform='translate(-50%, -50%) scale(0.5)';
+    div.style.background='lightpink';
+    div.style.color='black';
+    div.style.fontWeight='bold';
+    div.style.fontSize='48px';
+    div.style.width='120px';
+    div.style.height='80px';
+    div.style.display='flex';
+    div.style.justifyContent='center';
+    div.style.alignItems='center';
+    div.style.borderRadius='12px';
+    div.style.pointerEvents='none';
+    div.style.opacity='0';
+    div.style.transition='all 0.5s ease-out';
+    div.innerText=rs;
+    document.body.appendChild(div);
+    setTimeout(()=>{div.style.opacity='1'; div.style.transform='translate(-50%, -50%) scale(1)';},50);
+    setTimeout(()=>{div.style.opacity='0'; div.style.transform='translate(-50%, -50%) scale(0.5)'; setTimeout(()=>div.remove(),500);},2000);
+}
+
+function gameLoop(){
+    ctx.clearRect(0,0,width,height);
+    if(gameState==='round'){
+        roundDisplay.innerText=`Round: ${round}`;
+        balloons.forEach(b=>{ b.update(b.speed); b.draw(ctx); });
+        balloons=balloons.filter(b=>b.y>-100&&!b.popped);
+        if(!spawnInterval && balloons.length===0){
+            showRoundScore(roundScore);
+            if(round<3){ round++; gameState='chooseColor'; setTimeout(showColorChoices,2000); }
+            else{ gameState='end'; setTimeout(showLeaderboard,2000); }
+            roundScore=0;
+        }
+    }
+    requestAnimationFrame(gameLoop);
+}
+
+function showLeaderboard(){ leaderboard.style.display='block'; leaderboardList.innerHTML=`Your Score: ${score}`; }
+function restartGame(){ score=0; round=0; balloons=[]; forbiddenColor=''; scoreDisplay.innerText=`Score: ${score}`; leaderboard.style.display='none'; startDemo(); }
+
+startDemo();
+gameLoop();
+</script>
+</body>
+</html>
