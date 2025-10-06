@@ -3,56 +3,46 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Fugga Fod Dashboard</title>
+<title>Dashboard</title>
 <style>
-body {
-    font-family: sans-serif;
-    background:#f8c8d8;
-    margin:0;
-    display:flex;
-    flex-direction:column;
-    align-items:center;
-    padding:20px;
-}
-h2 { color:#ff66a0; margin-bottom:10px; }
-#ffIcon {
-    width:150px;
-    height:150px;
-    background:#fff url('images/ff_icon.png') no-repeat center/cover;
-    border-radius:20px;
-    box-shadow:0 4px 8px rgba(0,0,0,0.3);
-    margin-top:20px;
-    cursor:pointer;
-}
-button {
-    margin-top:20px;
-    padding:8px 16px;
-    border:none;
-    border-radius:6px;
-    background:#ff66a0;
-    color:#fff;
-    font-weight:bold;
-    cursor:pointer;
-}
+body { font-family:sans-serif; background:#f0f0f0; text-align:center; padding:20px; }
+#tokenDisplay { font-size:18px; margin-bottom:20px; }
+#ffIcon { display:inline-block; width:150px; height:150px; background:pink; border-radius:20px; line-height:150px; font-weight:bold; cursor:pointer; }
+button { padding:6px 12px; border:none; border-radius:6px; background:#ffd166; color:#081226; font-weight:bold; cursor:pointer; margin-top:20px; }
 </style>
 </head>
 <body>
 
-<h2>Welcome, <span id="welcomeUser"></span>!</h2>
+<h2>Dashboard</h2>
+<div id="tokenDisplay">Tokens: 0</div>
 
-<div id="ffIcon" title="Play Fugga Fod"></div>
+<div id="ffIcon">Fugga Fod</div>
 
 <button id="logoutBtn">Logout</button>
 
 <script>
-// Check if user is logged in
-const user = localStorage.getItem("currentUser");
-if(!user){ window.location.href="index.html"; }
-document.getElementById("welcomeUser").innerText = user;
+function updateTokenDisplay(){
+    const user = localStorage.getItem("currentUser");
+    if(!user) return;
+    const tokens = parseInt(localStorage.getItem("tokens_" + user)) || 0;
+    document.getElementById("tokenDisplay").innerText = "Tokens: " + tokens;
+}
 
-// FF icon click → open game
+// FF Icon click
 document.getElementById("ffIcon").addEventListener("click", ()=>{
-    window.location.href="FuggaFod.html"; // <-- update this if your game file name is different
+    const user = localStorage.getItem("currentUser");
+    if(!user){ alert("Please login first"); return; }
+
+    const cost = 50; // cost to play
+    let currentTokens = parseInt(localStorage.getItem("tokens_" + user)) || 0;
+
+    if(currentTokens >= cost){
+        localStorage.setItem("tokens_" + user, currentTokens - cost);
+        updateTokenDisplay();
+        window.location.href="FuggaFod.html"; // open game
+    } else {
+        alert("Not enough tokens to play!");
+    }
 });
 
 // Logout
@@ -60,7 +50,9 @@ document.getElementById("logoutBtn").addEventListener("click", ()=>{
     localStorage.removeItem("currentUser");
     window.location.href="index.html";
 });
-</script>
 
+// Update tokens on load
+updateTokenDisplay();
+</script>
 </body>
 </html>
