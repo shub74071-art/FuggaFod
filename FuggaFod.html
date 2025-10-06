@@ -56,7 +56,7 @@ const BLACK_COLOR = 'black';
 
 let gameState = 'demo', score = 0, round = 0, forbiddenColor = '', balloons = [], firstTap = true;
 let roundScore = 0;
-let roundSpeeds = [2, 3, 3.5];
+let roundSpeeds = [2.5, 3.2, 4.3];
 let spawnInterval = null;
 
 class Balloon {
@@ -148,8 +148,8 @@ canvas.addEventListener('mousedown', e=>{handleTap(getCanvasPos(e));});
 function buildSpawnPool(roundIndex){
     const data=[
         {red:4, blue:5, green:5, yellow:5, purple:5, bonus:1, black:1},
-        {red:5, blue:6, green:6, yellow:6, purple:6, bonus:1, black:2},
-        {red:6, blue:7, green:7, yellow:7, purple:7, bonus:1, black:3}
+        {red:5, blue:6, green:6, yellow:6, purple:6, bonus:2, black:1},
+        {red:6, blue:7, green:7, yellow:7, purple:7, bonus:3, black:1}
     ][roundIndex];
     let pool=[];
     for(const c of NORMAL_COLORS) for(let i=0;i<data[c];i++) pool.push(c);
@@ -259,4 +259,5 @@ startDemo();
 gameLoop();
 </script>
 </body>
-</html>
+    </html>
+    
