@@ -39,7 +39,7 @@ document.getElementById("ffIcon").addEventListener("click", ()=>{
     if(currentTokens >= cost){
         localStorage.setItem("tokens_" + user, currentTokens - cost);
         updateTokenDisplay();
-        window.location.href="ff_icon.png"; // open game
+        window.location.href="FuggaFod.html"; // open game
     } else {
         alert("Not enough tokens to play!");
     }
