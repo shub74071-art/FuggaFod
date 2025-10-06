@@ -14,7 +14,7 @@ body {
     align-items:center;
     padding:20px;
 }
-h2 { color:#ff66a0; }
+h2 { color:#ff66a0; margin-bottom:10px; }
 #ffIcon {
     width:150px;
     height:150px;
@@ -24,7 +24,6 @@ h2 { color:#ff66a0; }
     margin-top:20px;
     cursor:pointer;
 }
-#welcome { margin-bottom:10px; }
 button {
     margin-top:20px;
     padding:8px 16px;
@@ -38,6 +37,7 @@ button {
 </style>
 </head>
 <body>
+
 <h2>Welcome, <span id="welcomeUser"></span>!</h2>
 
 <div id="ffIcon" title="Play Fugga Fod"></div>
@@ -52,7 +52,7 @@ document.getElementById("welcomeUser").innerText = user;
 
 // FF icon click → open game
 document.getElementById("ffIcon").addEventListener("click", ()=>{
-    window.location.href="fugga_fod.html"; // points to your game
+    window.location.href="FuggaFod.html"; // <-- update this if your game file name is different
 });
 
 // Logout
@@ -61,6 +61,6 @@ document.getElementById("logoutBtn").addEventListener("click", ()=>{
     window.location.href="index.html";
 });
 </script>
+
 </body>
 </html>
-
