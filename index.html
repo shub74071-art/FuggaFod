@@ -3,57 +3,73 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Signup/Login</title>
+<title>FF Game Login</title>
 <style>
-body { font-family:sans-serif; display:flex; flex-direction:column; align-items:center; justify-content:center; height:100vh; background:#f0f0f0; }
-input, button { padding:10px; margin:5px; border-radius:5px; border:1px solid #ccc; }
-button { cursor:pointer; background:#ffd166; font-weight:bold; }
+body { font-family: Poppins,sans-serif; display:flex; justify-content:center; align-items:center; height:100vh; background:linear-gradient(315deg,#2c5364,#203a43,#0f2027); color:white; }
+.box { background: rgba(255,255,255,0.1); padding:20px; border-radius:10px; text-align:center; width:300px; }
+input { width:90%; padding:8px; margin:6px 0; border:none; border-radius:6px; }
+button { width:100%; padding:10px; border:none; border-radius:6px; background:#03a9f4; color:white; cursor:pointer; font-weight:bold; }
+button:hover { background:#0288d1; }
 </style>
 </head>
 <body>
-<h2>Signup / Login</h2>
-
-<div>
-    <input type="text" id="username" placeholder="Username">
-    <input type="password" id="password" placeholder="Password">
-    <button id="signupBtn">Sign Up</button>
-    <button id="loginBtn">Login</button>
+<div class="box">
+  <h2>🔥 FF Game Login 🔥</h2>
+  <input type="text" id="username" placeholder="Username"><br>
+  <input type="password" id="password" placeholder="Password"><br>
+  <button onclick="signupUser()">Sign Up & Play</button><br><br>
+  <button onclick="loginUser()">Login & Play</button>
 </div>
 
-<script>
-function signup(){
-    const username = document.getElementById("username").value.trim();
-    const password = document.getElementById("password").value.trim();
-    if(!username || !password){ alert("Enter username & password"); return; }
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
+import { getDatabase, ref, set, get, child } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-database.js";
 
-    if(localStorage.getItem("user_" + username)){
-        alert("User already exists!");
-        return;
-    }
+// 🔥 Firebase config with databaseURL
+const firebaseConfig = {
+  apiKey: "AIzaSyDSeRdpupEQcEwo_q54umdAU4WHeCoPTGs",
+  authDomain: "ff-game-login.firebaseapp.com",
+  databaseURL: "https://ff-game-login-default-rtdb.asia-southeast1.firebasedatabase.app/",
+  projectId: "ff-game-login",
+  storageBucket: "ff-game-login.firebasestorage.app",
+  messagingSenderId: "318341155193",
+  appId: "1:318341155193:web:d56d80dd691568b2cfc7a8",
+  measurementId: "G-0H5SM37VLZ"
+};
 
-    // Save user info
-    localStorage.setItem("user_" + username, password);
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
 
-    // Signup bonus
-    localStorage.setItem("tokens_" + username, 1000);
+// ✅ Signup with 1000 coins + auto login
+async function signupUser() {
+  const username = document.getElementById("username").value.trim();
+  const password = document.getElementById("password").value.trim();
+  if(!username || !password) return alert("Enter username and password");
 
-    localStorage.setItem("currentUser", username);
-    alert("Signup successful! You got 1000 tokens 🎉");
-    window.location.href="dashboard.html";
+  await set(ref(db, "users/" + username), {
+    password: password,
+    joinedAt: new Date().toISOString(),
+    coins: 1000
+  });
+
+  alert("🎉 Congratulations! 1000 coins credited.");
+  localStorage.setItem("token", username);
+  window.location.href = "dashboard.html";
 }
 
-function login(){
-    const username = document.getElementById("username").value.trim();
-    const password = document.getElementById("password").value.trim();
-    const saved = localStorage.getItem("user_" + username);
-    if(!saved || saved !== password){ alert("Invalid login"); return; }
-
-    localStorage.setItem("currentUser", username);
-    window.location.href="dashboard.html";
+// 🔐 Login
+async function loginUser() {
+  const username = document.getElementById("username").value.trim();
+  const password = document.getElementById("password").value.trim();
+  const snapshot = await get(child(ref(db), "users/" + username));
+  if(snapshot.exists()) {
+    const data = snapshot.val();
+    if(data.password === password) {
+      localStorage.setItem("token", username);
+      window.location.href = "dashboard.html";
+    } else alert("❌ Wrong password");
+  } else alert("⚠️ User not found");
 }
-
-document.getElementById("signupBtn").addEventListener("click", signup);
-document.getElementById("loginBtn").addEventListener("click", login);
 </script>
 </body>
 </html>
