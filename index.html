@@ -3,57 +3,180 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Signup/Login</title>
+<title>FuggaFod Signup/Login</title>
+<!-- Firebase JS SDK -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 <style>
-body { font-family:sans-serif; display:flex; flex-direction:column; align-items:center; justify-content:center; height:100vh; background:#f0f0f0; }
-input, button { padding:10px; margin:5px; border-radius:5px; border:1px solid #ccc; }
-button { cursor:pointer; background:#ffd166; font-weight:bold; }
+  body { 
+    background: linear-gradient(to bottom right, #6a11cb, #2575fc);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    font-family: sans-serif;
+    color: #fff;
+  }
+  .signup-card {
+    background: rgba(0,0,0,0.7);
+    padding: 30px;
+    border-radius: 15px;
+    box-shadow: 0 0 20px rgba(0,0,0,0.5);
+    width: 90%;
+    max-width: 400px;
+    text-align: center;
+  }
+  .signup-card input {
+    width: 100%;
+    padding: 12px;
+    margin: 10px 0;
+    border-radius: 8px;
+    border: none;
+    outline: none;
+  }
+  .signup-card button {
+    width: 100%;
+    padding: 12px;
+    background: #ff4b2b;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: 0.3s;
+    color: #fff;
+    margin-top: 10px;
+  }
+  .signup-card button:hover {
+    background: #ff416c;
+  }
+  .toggle-text {
+    color: #00ffff;
+    cursor: pointer;
+    margin-top: 15px;
+    font-size: 0.9em;
+    text-decoration: underline;
+    display: inline-block;
+  }
+  .error-msg { color: #ffcccb; font-size: 0.9em; }
 </style>
 </head>
 <body>
-<h2>Signup / Login</h2>
 
-<div>
-    <input type="text" id="username" placeholder="Username">
-    <input type="password" id="password" placeholder="Password">
-    <button id="signupBtn">Sign Up</button>
-    <button id="loginBtn">Login</button>
+<div class="signup-card">
+  <h2>FuggaFod Signup</h2>
+  
+  <!-- Signup Form -->
+  <form id="signupForm">
+    <input type="text" id="username" placeholder="Username" required><br>
+    <input type="email" id="email" placeholder="Email" required><br>
+    <input type="password" id="password" placeholder="Password" required><br>
+    <div class="error-msg" id="errorMsg"></div>
+    <button type="submit">Sign Up</button>
+  </form>
+  
+  <!-- Toggle Text to Login -->
+  <div class="toggle-text" id="showLoginBtn">Already have an account? Login</div>
+  
+  <!-- Login Form (hidden by default) -->
+  <form id="loginForm" style="display:none; margin-top:15px;">
+    <input type="email" id="loginEmail" placeholder="Email" required><br>
+    <input type="password" id="loginPassword" placeholder="Password" required><br>
+    <div class="error-msg" id="loginErrorMsg"></div>
+    <button type="submit">Login</button>
+  </form>
 </div>
 
 <script>
-function signup(){
-    const username = document.getElementById("username").value.trim();
-    const password = document.getElementById("password").value.trim();
-    if(!username || !password){ alert("Enter username & password"); return; }
+  // Firebase config
+  const firebaseConfig = {
+    apiKey: "AIzaSyDSeRdpupEQcEwo_q54umdAU4WHeCoPTGs",
+    authDomain: "ff-game-login.firebaseapp.com",
+    databaseURL: "https://ff-game-login-default-rtdb.asia-southeast1.firebasedatabase.app",
+    projectId: "ff-game-login",
+    storageBucket: "ff-game-login.firebasestorage.app",
+    messagingSenderId: "318341155193",
+    appId: "1:318341155193:web:d56d80dd691568b2cfc7a8",
+    measurementId: "G-0H5SM37VLZ"
+  };
+  firebase.initializeApp(firebaseConfig);
 
-    if(localStorage.getItem("user_" + username)){
-        alert("User already exists!");
-        return;
+  function validatePassword(password) {
+    const re = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{6,}$/;
+    return re.test(password);
+  }
+
+  const signupForm = document.getElementById('signupForm');
+  const loginForm = document.getElementById('loginForm');
+  const showLoginBtn = document.getElementById('showLoginBtn');
+  const errorMsg = document.getElementById('errorMsg');
+  const loginErrorMsg = document.getElementById('loginErrorMsg');
+
+  // Toggle to show login form
+  showLoginBtn.addEventListener('click', () => {
+    signupForm.style.display = 'none';
+    showLoginBtn.style.display = 'none';
+    loginForm.style.display = 'block';
+    document.querySelector('h2').textContent = 'FuggaFod Login';
+  });
+
+  // SIGNUP
+  signupForm.addEventListener('submit', function(e){
+    e.preventDefault();
+    const username = document.getElementById('username').value.trim();
+    const email = document.getElementById('email').value.trim();
+    const password = document.getElementById('password').value.trim();
+    errorMsg.textContent = '';
+
+    if(!validatePassword(password)){
+      errorMsg.textContent = 'Password must contain 1 uppercase, 1 lowercase, 1 number, 1 symbol';
+      return;
     }
 
-    // Save user info
-    localStorage.setItem("user_" + username, password);
+    const userId = Date.now();
+    firebase.database().ref('users/' + userId).set({
+      username: username,
+      email: email,
+      signupTime: new Date().toISOString(),
+      tokens: 1000,
+      password: password
+    }).then(() => {
+      localStorage.setItem('username', username);
+      localStorage.setItem('userId', userId);
+      window.location.href = 'dashboard.html';
+    }).catch((error) => {
+      console.error('Firebase error:', error);
+      errorMsg.textContent = error.message;
+    });
+  });
 
-    // Signup bonus
-    localStorage.setItem("tokens_" + username, 1000);
+  // LOGIN
+  loginForm.addEventListener('submit', function(e){
+    e.preventDefault();
+    const email = document.getElementById('loginEmail').value.trim();
+    const password = document.getElementById('loginPassword').value.trim();
+    loginErrorMsg.textContent = '';
 
-    localStorage.setItem("currentUser", username);
-    alert("Signup successful! You got 1000 tokens 🎉");
-    window.location.href="dashboard.html";
-}
-
-function login(){
-    const username = document.getElementById("username").value.trim();
-    const password = document.getElementById("password").value.trim();
-    const saved = localStorage.getItem("user_" + username);
-    if(!saved || saved !== password){ alert("Invalid login"); return; }
-
-    localStorage.setItem("currentUser", username);
-    window.location.href="dashboard.html";
-}
-
-document.getElementById("signupBtn").addEventListener("click", signup);
-document.getElementById("loginBtn").addEventListener("click", login);
+    firebase.database().ref('users').orderByChild('email').equalTo(email).once('value')
+    .then(snapshot => {
+      if(snapshot.exists()){
+        let userId = Object.keys(snapshot.val())[0];
+        let userData = snapshot.val()[userId];
+        if(userData.password === password){
+          localStorage.setItem('userId', userId);
+          localStorage.setItem('username', userData.username);
+          window.location.href = 'dashboard.html';
+        } else {
+          loginErrorMsg.textContent = 'Incorrect password';
+        }
+      } else {
+        loginErrorMsg.textContent = 'Email not registered';
+      }
+    }).catch(err => {
+      console.error(err);
+      loginErrorMsg.textContent = err.message;
+    });
+  });
 </script>
+
 </body>
 </html>
