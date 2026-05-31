@@ -257,6 +257,12 @@ function restartGame(){ score=0; round=0; balloons=[]; forbiddenColor=''; scoreD
 
 startDemo();
 gameLoop();
+window.history.pushState({ inGame: true }, "", "");
+
+window.onpopstate = function(event) {
+    window.location.href = 'dashboard.html';
+};
+    
 </script>
 </body>
     </html>
