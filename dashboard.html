@@ -1,109 +1,375 @@
+```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>FuggaFod — Home</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FuggaFod Dashboard</title>
+
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
 <style>
-  :root{
-    --glass-bg: rgba(255,255,255,0.06);
-    --accent: #00ffea;
-    --danger: #ff4b2b;
-    --card-radius: 18px;
-  }
-  html,body{height:100%;margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,'Helvetica Neue',Arial;}
-  body{
-    background: linear-gradient(135deg,#0f1226 0%, #22113a 45%, #40224f 100%);
-    color:#fff;
-    display:flex;
-    justify-content:center;
-    padding:28px;
-    box-sizing:border-box;
-  }
 
-  .container{
-    width:100%;
-    max-width:980px;
-  }
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+}
 
-  /* Header */
-  .header{
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
-    gap:12px;
-    margin-bottom:18px;
-  }
+body{
+font-family:Inter,sans-serif;
+background:linear-gradient(135deg,#0f1226,#22113a,#40224f);
+min-height:100vh;
+color:white;
+padding:20px;
+}
 
-  .leftHeader, .rightHeader{
-    display:flex;
-    align-items:center;
-    gap:12px;
-  }
+.header{
+display:flex;
+justify-content:space-between;
+align-items:center;
+margin-bottom:25px;
+gap:10px;
+}
 
-  .tokens-card{
-    background:var(--glass-bg);
-    backdrop-filter: blur(6px);
-    padding:10px 14px;
-    border-radius:14px;
-    display:flex;
-    align-items:center;
-    gap:10px;
-    box-shadow: 0 6px 18px rgba(0,0,0,0.6);
-  }
-  .tokens-card img{ width:20px; height:20px; }
-  .tokens-card .label{ font-weight:600; font-size:14px; opacity:0.9; }
-  .tokens-card .value{ font-weight:700; font-size:18px; color:var(--accent); }
+.profile{
+display:flex;
+align-items:center;
+gap:12px;
+}
 
-  /* Spin small button top-right */
-  .spin-small-btn{
-    background:linear-gradient(180deg,#151515,#0f0f10);
-    border-radius:12px;
-    padding:8px 12px;
-    display:flex;
-    gap:10px;
-    align-items:center;
-    cursor:pointer;
-    border:1px solid rgba(255,255,255,0.04);
-    box-shadow:0 8px 20px rgba(0,0,0,0.6);
-  }
-  .spin-small-btn .dot{ width:8px; height:8px; background:var(--accent); border-radius:50%; box-shadow:0 0 8px var(--accent); }
-  .spin-small-btn span{ font-weight:700; font-size:13px; color:#fff; }
+.profile img{
+width:55px;
+height:55px;
+border-radius:50%;
+border:2px solid #00ffea;
+}
 
-  /* Main content card */
-  .main-card{
-    background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.02));
-    border-radius: 18px;
-    padding:22px;
-    box-shadow: 0 12px 40px rgba(0,0,0,0.6);
-  }
+.name{
+font-size:18px;
+font-weight:700;
+}
 
-  .top-row{
-    display:flex;
-    justify-content:space-between;
-    align-items:flex-start;
-    gap:20px;
-    flex-wrap:wrap;
-  }
+.email{
+font-size:12px;
+opacity:0.7;
+}
 
-  /* Spin & Win area (top-right when expanded) */
-  .spin-area{
-    width:320px;
-    min-height:110px;
-    display:flex;
-    flex-direction:column;
-    align-items:center;
-    gap:12px;
-  }
+.logoutBtn{
+background:#ff4b2b;
+padding:10px 16px;
+border:none;
+border-radius:10px;
+font-weight:bold;
+color:white;
+cursor:pointer;
+}
 
-  /* Games area */
-  .games-area{
-    margin-top:18px;
-    display:flex;
-    gap:14px;
-    flex-wrap:wrap;
-  }
+.tokenCard{
+background:rgba(255,255,255,0.08);
+padding:18px;
+border-radius:18px;
+margin-bottom:25px;
+backdrop-filter:blur(8px);
+box-shadow:0 10px 25px rgba(0,0,0,0.5);
+}
+
+.tokenTitle{
+font-size:14px;
+opacity:0.7;
+margin-bottom:5px;
+}
+
+.tokenValue{
+font-size:38px;
+font-weight:800;
+color:#00ffea;
+}
+
+.grid{
+display:grid;
+grid-template-columns:repeat(auto-fit,minmax(250px,1fr));
+gap:20px;
+}
+
+.card{
+background:rgba(255,255,255,0.07);
+border-radius:20px;
+padding:20px;
+backdrop-filter:blur(10px);
+box-shadow:0 8px 30px rgba(0,0,0,0.4);
+}
+
+.card img{
+width:100%;
+height:180px;
+object-fit:cover;
+border-radius:15px;
+margin-bottom:15px;
+}
+
+.card h3{
+margin-bottom:10px;
+}
+
+.card p{
+font-size:14px;
+opacity:0.8;
+margin-bottom:15px;
+}
+
+.playBtn{
+width:100%;
+padding:12px;
+border:none;
+border-radius:12px;
+background:#00ffea;
+color:#000;
+font-weight:bold;
+cursor:pointer;
+font-size:15px;
+}
+
+.spinBtn{
+margin-top:20px;
+width:100%;
+padding:14px;
+border:none;
+border-radius:14px;
+background:linear-gradient(135deg,#ff416c,#ff4b2b);
+color:white;
+font-weight:800;
+cursor:pointer;
+font-size:16px;
+}
+
+.result{
+margin-top:15px;
+text-align:center;
+font-weight:bold;
+color:#ffd700;
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="header">
+
+<div class="profile">
+<img id="profilePic">
+
+<div>
+<div class="name" id="userName">Loading...</div>
+<div class="email" id="userEmail"></div>
+</div>
+</div>
+
+<button class="logoutBtn" id="logoutBtn">
+Logout
+</button>
+
+</div>
+
+<div class="tokenCard">
+<div class="tokenTitle">Your Tokens</div>
+<div class="tokenValue" id="tokenCount">0</div>
+</div>
+
+<div class="grid">
+
+<div class="card">
+
+<img src="images/ff_icon.png">
+
+<h3>FuggaFod</h3>
+
+<p>
+Play balloon popping challenge and earn high score.
+Entry Fee: 25 Tokens
+</p>
+
+<button class="playBtn" id="playBtn">
+Play Now
+</button>
+
+</div>
+
+</div>
+
+<button class="spinBtn" id="spinBtn">
+🎡 Spin & Win
+</button>
+
+<div class="result" id="spinResult"></div>
+
+<script>
+
+const firebaseConfig = {
+
+apiKey: "YOUR_API_KEY",
+authDomain: "YOUR_PROJECT.firebaseapp.com",
+databaseURL: "YOUR_DB_URL",
+projectId: "YOUR_PROJECT_ID",
+storageBucket: "YOUR_BUCKET",
+messagingSenderId: "YOUR_SENDER_ID",
+appId: "YOUR_APP_ID"
+
+};
+
+firebase.initializeApp(firebaseConfig);
+
+const auth = firebase.auth();
+const db = firebase.database();
+
+const userName = document.getElementById("userName");
+const userEmail = document.getElementById("userEmail");
+const profilePic = document.getElementById("profilePic");
+const tokenCount = document.getElementById("tokenCount");
+
+let currentUser = null;
+
+auth.onAuthStateChanged(async (user)=>{
+
+if(user){
+
+currentUser = user;
+
+userName.innerText = user.displayName;
+userEmail.innerText = user.email;
+profilePic.src = user.photoURL;
+
+const uid = user.uid;
+
+const userRef = db.ref("users/" + uid);
+
+const snap = await userRef.once("value");
+
+if(!snap.exists()){
+
+await userRef.set({
+
+name:user.displayName,
+email:user.email,
+photo:user.photoURL,
+tokens:1000,
+createdAt:new Date().toISOString()
+
+});
+
+}
+
+userRef.on("value",(snapshot)=>{
+
+const data = snapshot.val();
+
+if(data){
+
+tokenCount.innerText = data.tokens || 0;
+
+}
+
+});
+
+}else{
+
+window.location.href = "index.html";
+
+}
+
+});
+
+document.getElementById("logoutBtn")
+.addEventListener("click",()=>{
+
+auth.signOut().then(()=>{
+
+localStorage.clear();
+
+window.location.href = "index.html";
+
+});
+
+});
+
+document.getElementById("playBtn")
+.addEventListener("click", async ()=>{
+
+const uid = currentUser.uid;
+
+const userRef = db.ref("users/" + uid);
+
+const snap = await userRef.once("value");
+
+let data = snap.val();
+
+let tokens = data.tokens || 0;
+
+if(tokens < 25){
+
+alert("Not enough tokens!");
+
+return;
+
+}
+
+tokens -= 25;
+
+await userRef.update({
+
+tokens:tokens
+
+});
+
+window.location.href = "FuggaFod.html";
+
+});
+
+document.getElementById("spinBtn")
+.addEventListener("click", async ()=>{
+
+const rewards = [0,50,100,200,500];
+
+const reward = rewards[
+Math.floor(Math.random()*rewards.length)
+];
+
+const uid = currentUser.uid;
+
+const userRef = db.ref("users/" + uid);
+
+const snap = await userRef.once("value");
+
+let data = snap.val();
+
+let tokens = data.tokens || 0;
+
+tokens += reward;
+
+await userRef.update({
+
+tokens:tokens
+
+});
+
+document.getElementById("spinResult")
+.innerText =
+reward > 0
+? `🎉 You won ${reward} Tokens`
+: "😢 Better luck next time";
+
+});
+
+</script>
+
+</body>
+</html>
+```
 
   .game-card{
     background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
