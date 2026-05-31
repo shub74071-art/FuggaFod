@@ -257,12 +257,15 @@ function restartGame(){ score=0; round=0; balloons=[]; forbiddenColor=''; scoreD
 
 startDemo();
 gameLoop();
+// 1. Jaise hi game khule, browser history mein ek fake state push karo
 window.history.pushState({ inGame: true }, "", "");
 
+// 2. Jab bhi user phone ka Back Button dabaye
 window.onpopstate = function(event) {
+    // Agar game chal raha hai ya khatam ho gaya hai, back dabane par wapas dashboard par bhej do
     window.location.href = 'dashboard.html';
 };
-    
+
 </script>
 </body>
     </html>
