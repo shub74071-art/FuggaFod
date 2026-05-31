@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>FuggaFod Login</title>
 
+<!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
@@ -12,56 +13,52 @@
 <style>
 
 body{
-background: linear-gradient(to bottom right, #6a11cb, #2575fc);
-display:flex;
-justify-content:center;
-align-items:center;
-height:100vh;
-font-family:sans-serif;
-margin:0;
-color:white;
+  background: linear-gradient(to bottom right, #6a11cb, #2575fc);
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  height:100vh;
+  margin:0;
+  font-family:sans-serif;
+  color:white;
 }
 
 .login-card{
-background:rgba(0,0,0,0.7);
-padding:30px;
-border-radius:15px;
-width:90%;
-max-width:400px;
-text-align:center;
-box-shadow:0 0 20px rgba(0,0,0,0.5);
+  background:rgba(0,0,0,0.7);
+  padding:30px;
+  border-radius:15px;
+  width:90%;
+  max-width:400px;
+  text-align:center;
+  box-shadow:0 0 20px rgba(0,0,0,0.5);
 }
 
 .login-card h2{
-margin-bottom:20px;
+  margin-bottom:20px;
 }
 
 .googleBtn{
-width:100%;
-padding:14px;
-border:none;
-border-radius:10px;
-background:white;
-color:black;
-font-weight:bold;
-font-size:15px;
-cursor:pointer;
-transition:0.3s;
+  width:100%;
+  padding:14px;
+  border:none;
+  border-radius:10px;
+  background:white;
+  color:black;
+  font-weight:bold;
+  cursor:pointer;
+  font-size:16px;
 }
 
 .googleBtn:hover{
-transform:scale(1.03);
+  opacity:0.9;
 }
 
 .loader{
-margin-top:15px;
-display:none;
-font-size:14px;
-opacity:0.8;
+  margin-top:15px;
+  display:none;
 }
 
 </style>
-
 </head>
 
 <body>
@@ -84,13 +81,13 @@ Logging in...
 
 const firebaseConfig = {
 
-apiKey: "YOUR_API_KEY",
-authDomain: "YOUR_PROJECT.firebaseapp.com",
-databaseURL: "YOUR_DB_URL",
-projectId: "YOUR_PROJECT_ID",
-storageBucket: "YOUR_BUCKET",
-messagingSenderId: "YOUR_SENDER_ID",
-appId: "YOUR_APP_ID"
+  apiKey: "YOUR_API_KEY",
+  authDomain: "YOUR_PROJECT.firebaseapp.com",
+  databaseURL: "YOUR_DB_URL",
+  projectId: "YOUR_PROJECT_ID",
+  storageBucket: "YOUR_BUCKET",
+  messagingSenderId: "YOUR_SENDER_ID",
+  appId: "YOUR_APP_ID"
 
 };
 
@@ -104,6 +101,68 @@ document.getElementById("googleLoginBtn");
 
 const loader =
 document.getElementById("loader");
+
+auth.onAuthStateChanged(async (user)=>{
+
+  if(user){
+
+    const uid = user.uid;
+
+    const userRef = db.ref("users/" + uid);
+
+    const snap = await userRef.once("value");
+
+    if(!snap.exists()){
+
+      await userRef.set({
+
+        name:user.displayName,
+        email:user.email,
+        photo:user.photoURL,
+        tokens:1000,
+        lastSpin:0,
+        createdAt:new Date().toISOString()
+
+      });
+
+    }
+
+    window.location.href = "dashboard.html";
+
+  }
+
+});
+
+googleLoginBtn.addEventListener("click", ()=>{
+
+  loader.style.display = "block";
+
+  const provider =
+  new firebase.auth.GoogleAuthProvider();
+
+  auth.signInWithPopup(provider)
+
+  .then((result)=>{
+
+    console.log("Login Success");
+
+  })
+
+  .catch((error)=>{
+
+    loader.style.display = "none";
+
+    alert(error.message);
+
+  });
+
+});
+
+</script>
+
+</body>
+</html>
+```
 
 auth.onAuthStateChanged(async (user)=>{
 
