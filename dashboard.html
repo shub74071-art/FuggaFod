@@ -2,9 +2,9 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>FuggaFod Dashboard</title>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>FuggaFod — Home</title>
 
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
 
@@ -14,6 +14,12 @@
 
 <style>
 
+:root{
+--glass-bg: rgba(255,255,255,0.06);
+--accent: #00ffea;
+--danger: #ff4b2b;
+}
+
 *{
 margin:0;
 padding:0;
@@ -21,89 +27,443 @@ box-sizing:border-box;
 }
 
 body{
+background: linear-gradient(135deg,#0f1226 0%, #22113a 45%, #40224f 100%);
 font-family:Inter,sans-serif;
-background:linear-gradient(135deg,#0f1226,#22113a,#40224f);
-min-height:100vh;
 color:white;
+min-height:100vh;
 padding:20px;
+}
+
+.container{
+max-width:1000px;
+margin:auto;
 }
 
 .header{
 display:flex;
 justify-content:space-between;
 align-items:center;
-margin-bottom:25px;
+margin-bottom:20px;
 gap:10px;
+flex-wrap:wrap;
 }
 
-.profile{
+.userBox{
 display:flex;
 align-items:center;
 gap:12px;
 }
 
-.profile img{
+.userBox img{
 width:55px;
 height:55px;
 border-radius:50%;
-border:2px solid #00ffea;
+border:2px solid var(--accent);
 }
 
-.name{
+.userName{
 font-size:18px;
 font-weight:700;
 }
 
-.email{
+.userEmail{
 font-size:12px;
 opacity:0.7;
 }
 
 .logoutBtn{
-background:#ff4b2b;
 padding:10px 16px;
+background:var(--danger);
 border:none;
 border-radius:10px;
+cursor:pointer;
 font-weight:bold;
 color:white;
+}
+
+.tokens-card{
+background:var(--glass-bg);
+padding:18px;
+border-radius:18px;
+backdrop-filter:blur(8px);
+margin-bottom:20px;
+box-shadow:0 8px 25px rgba(0,0,0,0.5);
+}
+
+.tokens-label{
+font-size:14px;
+opacity:0.7;
+}
+
+.tokens-value{
+font-size:38px;
+font-weight:800;
+color:var(--accent);
+margin-top:5px;
+}
+
+.games-area{
+display:flex;
+gap:20px;
+flex-wrap:wrap;
+}
+
+.game-card{
+background:rgba(255,255,255,0.05);
+padding:16px;
+border-radius:18px;
+width:260px;
+backdrop-filter:blur(10px);
+box-shadow:0 8px 25px rgba(0,0,0,0.4);
+}
+
+.game-card img{
+width:100%;
+height:180px;
+object-fit:cover;
+border-radius:14px;
+margin-bottom:12px;
+}
+
+.game-card h3{
+margin-bottom:8px;
+}
+
+.game-card p{
+font-size:14px;
+opacity:0.75;
+margin-bottom:15px;
+}
+
+.playBtn{
+width:100%;
+padding:12px;
+border:none;
+border-radius:12px;
+background:var(--accent);
+color:black;
+font-weight:700;
 cursor:pointer;
 }
 
-.tokenCard{
-background:rgba(255,255,255,0.08);
-padding:18px;
-border-radius:18px;
-margin-bottom:25px;
-backdrop-filter:blur(8px);
-box-shadow:0 10px 25px rgba(0,0,0,0.5);
-}
-
-.tokenTitle{
-font-size:14px;
-opacity:0.7;
-margin-bottom:5px;
-}
-
-.tokenValue{
-font-size:38px;
-font-weight:800;
-color:#00ffea;
-}
-
-.grid{
-display:grid;
-grid-template-columns:repeat(auto-fit,minmax(250px,1fr));
-gap:20px;
-}
-
-.card{
-background:rgba(255,255,255,0.07);
-border-radius:20px;
+.spinBox{
+margin-top:25px;
+background:rgba(255,255,255,0.05);
 padding:20px;
+border-radius:18px;
 backdrop-filter:blur(10px);
-box-shadow:0 8px 30px rgba(0,0,0,0.4);
 }
 
+.spinBtn{
+width:100%;
+padding:15px;
+border:none;
+border-radius:14px;
+background:linear-gradient(135deg,#ff416c,#ff4b2b);
+color:white;
+font-size:16px;
+font-weight:800;
+cursor:pointer;
+}
+
+.spinResult{
+margin-top:15px;
+text-align:center;
+font-weight:bold;
+color:#ffd700;
+font-size:18px;
+}
+
+.cooldown{
+margin-top:10px;
+text-align:center;
+opacity:0.7;
+font-size:14px;
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<div class="header">
+
+<div class="userBox">
+
+<img id="profilePic">
+
+<div>
+<div class="userName" id="userName">Loading...</div>
+<div class="userEmail" id="userEmail"></div>
+</div>
+
+</div>
+
+<button class="logoutBtn" id="logoutBtn">
+Logout
+</button>
+
+</div>
+
+<div class="tokens-card">
+
+<div class="tokens-label">
+Your Tokens
+</div>
+
+<div class="tokens-value" id="tokenCount">
+0
+</div>
+
+</div>
+
+<div class="games-area">
+
+<div class="game-card">
+
+<img src="images/ff_icon.png">
+
+<h3>FuggaFod</h3>
+
+<p>
+Balloon popping challenge game.
+Entry Fee: 25 Tokens
+</p>
+
+<button class="playBtn" id="playBtn">
+Play Game
+</button>
+
+</div>
+
+</div>
+
+<div class="spinBox">
+
+<button class="spinBtn" id="spinBtn">
+🎡 Spin & Win
+</button>
+
+<div class="spinResult" id="spinResult">
+</div>
+
+<div class="cooldown" id="cooldownText">
+</div>
+
+</div>
+
+</div>
+
+<script>
+
+const firebaseConfig = {
+
+apiKey: "YOUR_API_KEY",
+authDomain: "YOUR_PROJECT.firebaseapp.com",
+databaseURL: "YOUR_DB_URL",
+projectId: "YOUR_PROJECT_ID",
+storageBucket: "YOUR_BUCKET",
+messagingSenderId: "YOUR_SENDER_ID",
+appId: "YOUR_APP_ID"
+
+};
+
+firebase.initializeApp(firebaseConfig);
+
+const auth = firebase.auth();
+const db = firebase.database();
+
+const userName = document.getElementById("userName");
+const userEmail = document.getElementById("userEmail");
+const profilePic = document.getElementById("profilePic");
+const tokenCount = document.getElementById("tokenCount");
+
+const spinResult = document.getElementById("spinResult");
+const cooldownText = document.getElementById("cooldownText");
+
+let currentUser = null;
+
+auth.onAuthStateChanged(async (user)=>{
+
+if(user){
+
+currentUser = user;
+
+userName.innerText = user.displayName;
+userEmail.innerText = user.email;
+profilePic.src = user.photoURL;
+
+const uid = user.uid;
+
+const userRef = db.ref("users/" + uid);
+
+const snap = await userRef.once("value");
+
+if(!snap.exists()){
+
+await userRef.set({
+
+name:user.displayName,
+email:user.email,
+photo:user.photoURL,
+tokens:1000,
+lastSpin:0,
+createdAt:new Date().toISOString()
+
+});
+
+}
+
+userRef.on("value",(snapshot)=>{
+
+const data = snapshot.val();
+
+if(data){
+
+tokenCount.innerText = data.tokens || 0;
+
+updateCooldown(data.lastSpin || 0);
+
+}
+
+});
+
+}else{
+
+window.location.href = "index.html";
+
+}
+
+});
+
+function updateCooldown(lastSpin){
+
+const now = Date.now();
+
+const cooldown = 4 * 60 * 60 * 1000;
+
+const remaining = cooldown - (now - lastSpin);
+
+if(remaining <= 0){
+
+cooldownText.innerText = "Spin Ready";
+
+}else{
+
+const h = Math.floor(remaining / 3600000);
+const m = Math.floor((remaining % 3600000) / 60000);
+const s = Math.floor((remaining % 60000) / 1000);
+
+cooldownText.innerText =
+`Next Spin in ${h}h ${m}m ${s}s`;
+
+setTimeout(()=>{
+
+updateCooldown(lastSpin);
+
+},1000);
+
+}
+
+}
+
+document.getElementById("logoutBtn")
+.addEventListener("click",()=>{
+
+auth.signOut().then(()=>{
+
+window.location.href = "index.html";
+
+});
+
+});
+
+document.getElementById("playBtn")
+.addEventListener("click", async ()=>{
+
+const uid = currentUser.uid;
+
+const userRef = db.ref("users/" + uid);
+
+const snap = await userRef.once("value");
+
+const data = snap.val();
+
+let tokens = data.tokens || 0;
+
+if(tokens < 25){
+
+alert("Not enough tokens!");
+
+return;
+
+}
+
+tokens -= 25;
+
+await userRef.update({
+
+tokens:tokens
+
+});
+
+window.location.href = "FuggaFod.html";
+
+});
+
+document.getElementById("spinBtn")
+.addEventListener("click", async ()=>{
+
+const uid = currentUser.uid;
+
+const userRef = db.ref("users/" + uid);
+
+const snap = await userRef.once("value");
+
+const data = snap.val();
+
+const now = Date.now();
+
+const cooldown = 4 * 60 * 60 * 1000;
+
+if(now - data.lastSpin < cooldown){
+
+alert("Spin cooldown active!");
+
+return;
+
+}
+
+const rewards = [0,50,100,200,500];
+
+const reward =
+rewards[Math.floor(Math.random()*rewards.length)];
+
+let tokens = data.tokens || 0;
+
+tokens += reward;
+
+await userRef.update({
+
+tokens:tokens,
+lastSpin:now
+
+});
+
+spinResult.innerText =
+reward > 0
+? `🎉 You won ${reward} Tokens`
+: `😢 Better luck next time`;
+
+});
+
+</script>
+
+</body>
+</html>
+```
 .card img{
 width:100%;
 height:180px;
