@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -10,60 +10,88 @@
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
 <style>
+
 body{
-  margin:0;
-  height:100vh;
-  display:flex;
-  justify-content:center;
-  align-items:center;
-  background:linear-gradient(135deg,#6a11cb,#2575fc);
-  font-family:sans-serif;
+background: linear-gradient(to bottom right, #6a11cb, #2575fc);
+display:flex;
+justify-content:center;
+align-items:center;
+height:100vh;
+font-family:sans-serif;
+margin:0;
+color:white;
 }
 
-.card{
-  background:rgba(0,0,0,0.7);
-  padding:30px;
-  border-radius:15px;
-  text-align:center;
-  color:white;
-  width:300px;
+.login-card{
+background:rgba(0,0,0,0.7);
+padding:30px;
+border-radius:15px;
+width:90%;
+max-width:400px;
+text-align:center;
+box-shadow:0 0 20px rgba(0,0,0,0.5);
 }
 
-button{
-  padding:12px;
-  width:100%;
-  border:none;
-  border-radius:10px;
-  background:#ffffff;
-  color:#000;
-  font-weight:bold;
-  cursor:pointer;
-  margin-top:15px;
+.login-card h2{
+margin-bottom:20px;
 }
+
+.googleBtn{
+width:100%;
+padding:14px;
+border:none;
+border-radius:10px;
+background:white;
+color:black;
+font-weight:bold;
+font-size:15px;
+cursor:pointer;
+transition:0.3s;
+}
+
+.googleBtn:hover{
+transform:scale(1.03);
+}
+
+.loader{
+margin-top:15px;
+display:none;
+font-size:14px;
+opacity:0.8;
+}
+
 </style>
+
 </head>
 
 <body>
 
-<div class="card">
-  <h2>FuggaFod</h2>
-  <p>Login with Google</p>
+<div class="login-card">
 
-  <button id="googleLogin">
-    Continue with Google
-  </button>
+<h2>FuggaFod Login</h2>
+
+<button class="googleBtn" id="googleLoginBtn">
+Continue with Google
+</button>
+
+<div class="loader" id="loader">
+Logging in...
+</div>
+
 </div>
 
 <script>
 
 const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_PROJECT.firebaseapp.com",
-  databaseURL: "YOUR_DB_URL",
-  projectId: "YOUR_PROJECT_ID",
-  storageBucket: "YOUR_BUCKET",
-  messagingSenderId: "YOUR_SENDER_ID",
-  appId: "YOUR_APP_ID"
+
+apiKey: "YOUR_API_KEY",
+authDomain: "YOUR_PROJECT.firebaseapp.com",
+databaseURL: "YOUR_DB_URL",
+projectId: "YOUR_PROJECT_ID",
+storageBucket: "YOUR_BUCKET",
+messagingSenderId: "YOUR_SENDER_ID",
+appId: "YOUR_APP_ID"
+
 };
 
 firebase.initializeApp(firebaseConfig);
@@ -71,39 +99,75 @@ firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.database();
 
-document.getElementById("googleLogin")
-.addEventListener("click", function(){
+const googleLoginBtn =
+document.getElementById("googleLoginBtn");
 
-  const provider = new firebase.auth.GoogleAuthProvider();
+const loader =
+document.getElementById("loader");
 
-  auth.signInWithPopup(provider)
-  .then(async (result)=>{
+auth.onAuthStateChanged(async (user)=>{
 
-      const user = result.user;
+if(user){
 
-      const uid = user.uid;
+const uid = user.uid;
 
-      localStorage.setItem("uid", uid);
+const userRef = db.ref("users/" + uid);
 
-      const userRef = db.ref("users/" + uid);
+const snap = await userRef.once("value");
 
-      const snap = await userRef.once("value");
+if(!snap.exists()){
 
-      if(!snap.exists()){
+await userRef.set({
 
-        userRef.set({
-          name:user.displayName,
-          email:user.email,
-          photo:user.photoURL,
-          tokens:1000,
-          createdAt:new Date().toISOString()
-        });
+name:user.displayName,
+email:user.email,
+photo:user.photoURL,
+tokens:1000,
+lastSpin:0,
+createdAt:new Date().toISOString()
 
-      }
+});
 
-      window.location.href = "dashboard.html";
+}
 
-  })
+window.location.href = "dashboard.html";
+
+}
+
+});
+
+googleLoginBtn.addEventListener("click", ()=>{
+
+loader.style.display = "block";
+
+const provider =
+new firebase.auth.GoogleAuthProvider();
+
+auth.signInWithPopup(provider)
+
+.then((result)=>{
+
+const user = result.user;
+
+console.log("Logged In:", user.email);
+
+})
+
+.catch((error)=>{
+
+loader.style.display = "none";
+
+alert(error.message);
+
+});
+
+});
+
+</script>
+
+</body>
+</html>
+```
   .catch((error)=>{
       alert(error.message);
   });
